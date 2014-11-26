@@ -161,47 +161,75 @@ window.onload = function() {
 }; */
 
 
-
+var Game = {};
+Game.tile = 32;
+Game.speed = Game.tile / 12;
+Game.map = {
+        x: 5, y: 5,
+        floors: [
+                 [1, 1, 1],
+                 [2, 2, 1]
+                ],
+        things: [
+                 [3, 3, 1],
+                 [4, 3, 2],
+                 [5, 3, 3]
+                 ],
+    };
 
 window.onload = function() {
-    //Calculting infinity
-    var Game = {};
-    Game.tile = 48;
-    Game.height = 15;
-    Game.width = 20;
-    Game.speed = Game.tile / 12
-
-
     /* Start crafty */
-    Crafty.init(Game.tile * Game.width, Game.tile * Game.height, 'game');
+    Crafty.init(Game.tile * 40, Game.tile * 20, 'game');
     Crafty.background('#004');
 
 
-    /* Maps */
+    /* Utils */
     function generateMap() {
         var i, j;
-        for (i = 0; i < Game.width; ++i) {
-            for (j = 0; j < Game.height; ++j) {
-                if (i == 0) {
-                    Crafty.e('2D, Canvas, Color, cacas').attr({x: i * Game.tile, y: j * Game.tile, w: 48, h: 48}).color('#F00');
-                } else {
-                    Crafty.e('2D, Canvas, Color').attr({x: i * Game.tile, y: j * Game.tile, w: 48, h: 48}).color('#F00');
-                }
-            }
+
+        for (i = 0; i < Game.map.floors.length; ++i) {
+            var data = Game.map.floors[i];
+            var it = floorOff(data[2] - 1);
+
+            Crafty.e('2D, Canvas, piso, Sprite')
+                  .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 0})
+                  .sprite(it[0], it[1]);
         }
-        console.log('generated')
+
+        console.log('Map generated');
     }
 
-    /* Sprites */
-    Crafty.sprite(32, "gato.png", {
-        gato: [0,0]
-    });
+    function getOffset(i, w, h) {
+        var x = i % w;
+        var y = Math.floor(i / h);
+
+        return [x, y];
+    }
+
+    function floorOff(i) {
+        return getOffset(i, 4, 4);
+    }
+
+    function thingOff(i) {
+        return getOffset(i, 19, 19);
+    }
 
 
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
-        Crafty.load(["gato.png"], function() {
+        Crafty.load(["gato.png", "sprite.png", "floor.png"], function() {
+            /* Creating sprites */
+            Crafty.sprite(16, "floor.png", {
+                piso: [0,0]
+            });
+            Crafty.sprite(Game.tile, "sprite.png", {
+                cosas: [0,0]
+            });
+            Crafty.sprite(Game.tile, "gato.png", {
+                gato: [0,0]
+            });
+
             console.log('DONE')
             Crafty.scene("menu");
         });
@@ -240,14 +268,44 @@ window.onload = function() {
               .css({"text-align": "center"});
     });
 
+    //Editor
+    Crafty.scene('editor', function() {
+        Crafty.background("#000");
+
+        $('#selector').show().css('opacity', 0.5);
+        $('#sprites').show().on('click', function(ev) {
+            var offset = $(this).offset();
+            var xx = Math.floor((ev.clientX - offset.left) / Game.tile);
+            var yy = Math.floor((ev.clientY - offset.top) / Game.tile);
+
+            Game._editselected = [xx, yy];
+            $('#selector').css('top', Game.tile * yy);
+            $('#selector').css('left', Game.tile * xx);
+        });
+
+        $('#game').on('click', function(ev) {
+            var offset = $(this).offset();
+            var xx = Math.floor((ev.clientX - offset.left) / Game.tile);
+            var yy = Math.floor((ev.clientY - offset.top) / Game.tile);
+
+            Crafty.e('2D, Canvas, cosas, Sprite, Mouse')
+                  .attr({x: xx * Game.tile, y: yy * Game.tile, w: Game.tile, h: Game.tile, z: 0})
+                  .sprite(Game._editselected[0], Game._editselected[1])
+                  .bind('MouseDown', function(a) {
+                      if (a.which == 3) {
+                          this.destroy();
+                      }
+                  });
+        });
+    });
+
     //Main game
     Crafty.scene('game', function() {
-        Crafty.background("#fff");
+        Crafty.background("#000");
 
         generateMap();
-
         Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
-              .attr({x: 48 * 4 , y: 48 * 4, w: Game.tile, h: Game.tile}) //resize ;)
+              .attr({x: Game.tile * 4 , y: Game.tile * 4, w: Game.tile, h: Game.tile, z: 666}) //resize ;)
               .fourway(Game.speed)
 
               .reel("down", 500, 0, 0, 3)
@@ -257,10 +315,10 @@ window.onload = function() {
               .animate("down", -1)
 
               .collision()
-              .onHit("cacas", function(a){
+              /* .onHit("cacas", function(a){
                   this.x -= this._speed[0] * Game.speed;
                   this.y -= this._speed[1] * Game.speed;
-              })
+              }) */
 
               .bind('Move', function(ev) {
                   if (ev._x < this.x && !this.isPlaying("right")) {
@@ -279,6 +337,7 @@ window.onload = function() {
                       this._speed = [0, 1];
                   }
               });
+        
     });
 
 
