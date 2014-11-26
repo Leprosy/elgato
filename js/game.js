@@ -166,22 +166,28 @@ Game.tile = 32;
 Game.speed = Game.tile / 12;
 Game.map = {
         x: 5, y: 5,
-        floors: [
-                 [1, 1, 0],
-                 [2, 2, 1]
-                ],
-        things: [[12,4,4],[13,4,4],[14,4,4],[15,4,4],[12,5,13],[13,5,13],[14,5,13],[15,5,13],[11,4,1],[11,5,1],[11,6,1],[11,7,1],[11,8,1],[11,9,1],[11,10,2],[10,10,2],[9,10,2],[8,10,2],[7,10,1],[7,11,1],[7,12,1],[7,13,1],[8,13,4],[9,13,4],[10,13,4],[11,13,4],[12,13,4],[13,13,4],[14,13,4],[15,13,4],[16,13,4],[17,13,4],[18,13,0],[18,12,0],[18,11,0],[18,10,0],[18,9,0],[18,8,0],[18,7,0],[18,6,0],[18,5,0],[18,4,0],[16,4,4],[17,4,4],[16,5,14],[17,5,14],[8,11,11],[9,11,11],[10,11,11],[11,11,11],[12,6,6],[12,7,15],[12,8,7],[12,9,6],[12,10,15],[12,11,16]]
+        things: [[8,7,6],[8,8,15],[8,9,7],[8,5,13],[9,5,13],[10,5,13],[8,4,4],[9,4,4],[10,4,4],[7,4,1],[7,5,1],[7,6,1],[7,7,1],[7,8,1],[7,9,1],[7,10,1],[8,10,4],[9,10,4],[10,10,4],[11,4,0],[11,5,0],[11,6,3],[12,6,3],[11,7,13],[12,7,13],[12,5,1],[12,4,1],[13,4,2],[14,4,2],[15,4,0],[15,5,0],[15,6,0],[15,7,0],[15,8,0],[15,9,0],[15,10,0],[11,10,4],[12,10,4],[13,10,4],[14,10,4],[13,5,11],[14,5,11]],
+        floors: [[8,7,0],[9,7,0],[8,8,0],[8,9,0],[9,9,0],[9,8,0],[10,7,0],[10,8,0],[10,9,0],[8,6,0],[9,6,0],[10,6,0],[11,8,0],[12,8,0],[11,9,0],[12,9,0],[13,6,11],[14,6,11],[13,7,11],[14,7,11],[13,8,0],[14,8,0],[13,9,0],[14,9,0]]
     };
 
-function serializeThings() {
+function serializeMap() {
     var things = Crafty("cosas").get();
-    var ser = "[";
+    var ser = "things: [";
 
     for (i = 0; i < things.length; ++i) {
         ser += "[" + things[i]._x / Game.tile + "," + things[i]._y / Game.tile + ","+ things[i]._item + "],";
     }
+    ser += "]";
 
-    return ser += "]";
+    var floors = Crafty("piso").get();
+    ser += ", floors: [";
+
+    for (i = 0; i < floors.length; ++i) {
+        ser += "[" + floors[i]._x / Game.tile + "," + floors[i]._y / Game.tile + ","+ floors[i]._item + "],";
+    }
+    ser += "]";
+
+    return ser;
 }
 
 window.onload = function() {
@@ -294,9 +300,18 @@ window.onload = function() {
             var xx = Math.floor((ev.clientX - offset.left) / Game.tile);
             var yy = Math.floor((ev.clientY - offset.top) / Game.tile);
 
-            Game._editselected = [xx, yy];
+            Game._editselected = [xx, yy, "thing"];
             $('#selector').css('top', Game.tile * yy);
             $('#selector').css('left', Game.tile * xx);
+        });
+        $('#floors').show().on('click', function(ev) {
+            var offset = $(this).offset();
+            var xx = Math.floor((ev.clientX - offset.left) / Game.tile);
+            var yy = Math.floor((ev.clientY - offset.top) / Game.tile);
+
+            Game._editselected = [xx, yy, "floor"];
+            $('#selector').css('top', Game.tile * yy + offset.top);
+            $('#selector').css('left', Game.tile * xx + offset.left);
         });
 
         $('#game').on('click', function(ev) {
@@ -305,14 +320,25 @@ window.onload = function() {
             var yy = Math.floor((ev.clientY - offset.top) / Game.tile);
             var item = Game._editselected[0] + 9 * Game._editselected[1];
 
-            Crafty.e('2D, Canvas, cosas, Sprite, Mouse')
-                  .attr({x: xx * Game.tile, y: yy * Game.tile, w: Game.tile, h: Game.tile, z: 0, _item: item })
-                  .sprite(Game._editselected[0], Game._editselected[1])
-                  .bind('MouseDown', function(a) {
-                      if (a.which == 3) {
-                          this.destroy();
-                      }
-                  });
+            if (Game._editselected[2] == 'thing') {
+                Crafty.e('2D, Canvas, cosas, Sprite, Mouse')
+                      .attr({x: xx * Game.tile, y: yy * Game.tile, w: Game.tile, h: Game.tile, z: 1, _item: item })
+                      .sprite(Game._editselected[0], Game._editselected[1])
+                      .bind('MouseDown', function(a) {
+                          if (a.which == 3) {
+                              this.destroy();
+                          }
+                      });
+            } else {
+                Crafty.e('2D, Canvas, piso, Sprite, Mouse')
+                      .attr({x: xx * Game.tile, y: yy * Game.tile, w: Game.tile, h: Game.tile, z: 0, _item: item })
+                      .sprite(Game._editselected[0], Game._editselected[1])
+                      .bind('MouseDown', function(a) {
+                          if (a.which == 3) {
+                              this.destroy();
+                          }
+                      });
+            }
         });
     });
 
