@@ -253,9 +253,10 @@ window.onload = function() {
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
-        Crafty.load(["img/gato.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3"], function() {
-            // Create resources
+        Crafty.load(["img/gato.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3", "snd/miau.mp3"], function() {
+            // Create resources (Using object for loading is more robust/efficient?)
             Crafty.audio.add("music", "snd/elgato.mp3");
+            Crafty.audio.add("miau", "snd/miau.mp3");
             Crafty.sprite(16, "img/floor.png", { piso: [0,0] });
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
             Crafty.sprite(Game.tile, "img/gato.png", { gato: [0,0] });
@@ -361,10 +362,10 @@ window.onload = function() {
               .fourway(Game.speed)
 
               // Animations definition
-              .reel("down", 500, 0, 0, 3)
-              .reel("left", 500, 0, 1, 3)
-              .reel("right", 500, 0, 2, 3)
-              .reel("up", 500, 0, 3, 3)
+              .reel("down", 200, 0, 0, 3)
+              .reel("left", 200, 0, 1, 3)
+              .reel("right", 200, 0, 2, 3)
+              .reel("up", 200, 0, 3, 3)
 
               // Detect collisions
               .collision()
@@ -374,27 +375,36 @@ window.onload = function() {
 
                   if (a[0].obj._x != this._x) this.x -= this._delta.x;
                   if (a[0].obj._y != this._y) this.y -= this._delta.y;
-
-                  this.pauseAnimation().resetAnimation();
               })
 
               // Events
               .bind("NewDirection", function(a) {
                   this._delta = a;
+                  //Pause cat?
+                  if (a.x == 0 && a.y == 0) this.pauseAnimation().resetAnimation();
+
+                  // Else, animate cat in the right direction
                   if (a.x > 0) this.animate("right", -1);
                   if (a.x < 0) this.animate("left", -1);
                   if (a.y > 0) this.animate("down", -1);
                   if (a.y < 0) this.animate("up", -1);
               })
               .bind("KeyUp", function(ev) {
-                  this.pauseAnimation().resetAnimation();
+                  // Need this?
+              })
+              .bind("KeyDown", function(ev) {
+                  if (ev.key == 32) { // Space bar -> command cat
+                      // For now, annoy humans!
+                      console.log("Miau");
+                      Crafty.audio.play("miau", 1);
+                  } 
               })
               .bind('Move', function(ev) {
                   // Do we need code here?
               });
 
         // Start!
-        Crafty.audio.play("music", -1);
+        //Crafty.audio.play("music", -1);
     });
 
 
