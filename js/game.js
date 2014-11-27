@@ -163,62 +163,75 @@ window.onload = function() {
 
 var Game = {};
 Game.tile = 32;
-Game.speed = Game.tile / 12;
-Game.map = {
-        x: 5, y: 5,
+Game.speed = 2; //Game.tile / 12;
+Game.map = {};
+
+
+/* Extras : editor and map */
+//this must be loaded elsewhere(json, ajax?) 
+var __map = { x: 10, y: 8,
         things: [[8,7,6],[8,8,15],[8,9,7],[8,5,13],[9,5,13],[10,5,13],[8,4,4],[9,4,4],[10,4,4],[7,4,1],[7,5,1],[7,6,1],[7,7,1],[7,8,1],[7,9,1],[7,10,1],[8,10,4],[9,10,4],[10,10,4],[11,4,0],[11,5,0],[11,6,3],[12,6,3],[11,7,13],[12,7,13],[12,5,1],[12,4,1],[13,4,2],[14,4,2],[15,4,0],[15,5,0],[15,6,0],[15,7,0],[15,8,0],[15,9,0],[15,10,0],[11,10,4],[12,10,4],[13,10,4],[14,10,4],[13,5,11],[14,5,11]],
         floors: [[8,7,0],[9,7,0],[8,8,0],[8,9,0],[9,9,0],[9,8,0],[10,7,0],[10,8,0],[10,9,0],[8,6,0],[9,6,0],[10,6,0],[11,8,0],[12,8,0],[11,9,0],[12,9,0],[13,6,11],[14,6,11],[13,7,11],[14,7,11],[13,8,0],[14,8,0],[13,9,0],[14,9,0]]
     };
 
 function serializeMap() {
     var things = Crafty("cosas").get();
+    var floors = Crafty("piso").get();
     var ser = "things: [";
 
     for (i = 0; i < things.length; ++i) {
         ser += "[" + things[i]._x / Game.tile + "," + things[i]._y / Game.tile + ","+ things[i]._item + "],";
     }
-    ser += "]";
 
-    var floors = Crafty("piso").get();
+    ser = ser.slice(0, -1) + "]";
     ser += ", floors: [";
 
     for (i = 0; i < floors.length; ++i) {
         ser += "[" + floors[i]._x / Game.tile + "," + floors[i]._y / Game.tile + ","+ floors[i]._item + "],";
     }
-    ser += "]";
 
+    ser = ser.slice(0, -1) + "]";
     return ser;
 }
+
+
 
 window.onload = function() {
     /* Start crafty */
     Crafty.init(Game.tile * 40, Game.tile * 20, 'game');
     Crafty.background('#004');
 
-
     /* Utils */
-    function generateMap() {
-        var i, j;
+    function loadMap(map) {
 
-        for (i = 0; i < Game.map.floors.length; ++i) {
-            var data = Game.map.floors[i];
-            var it = floorOff(data[2]);
-
-            Crafty.e('2D, Canvas, piso, Sprite')
-                  .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 0})
-                  .sprite(it[0], it[1]);
+        try {
+            Game.map = map;
+            var i, j;
+    
+            // Load things and floors
+            for (i = 0; i < Game.map.floors.length; ++i) {
+                var data = Game.map.floors[i];
+                var it = floorOff(data[2]);
+    
+                Crafty.e('2D, Canvas, piso, Sprite')
+                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 0})
+                      .sprite(it[0], it[1]);
+            }
+    
+            for (i = 0; i < Game.map.things.length; ++i) {
+                var data = Game.map.things[i];
+                var it = thingOff(data[2]);
+    
+                Crafty.e('2D, Canvas, cosas, Sprite')
+                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 1})
+                      .sprite(it[0], it[1]);
+            }
+    
+            console.log('Map generated');
+        } catch(e) {
+            alert("Invalid map data");
+            console.log("Error data", e);
         }
-
-        for (i = 0; i < Game.map.things.length; ++i) {
-            var data = Game.map.things[i];
-            var it = thingOff(data[2]);
-
-            Crafty.e('2D, Canvas, cosas, Sprite')
-                  .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 1})
-                  .sprite(it[0], it[1]);
-        }
-
-        console.log('Map generated');
     }
 
     function getOffset(i, w, h) {
@@ -252,7 +265,6 @@ window.onload = function() {
                 gato: [0,0]
             });
 
-            console.log('DONE')
             Crafty.scene("menu");
         });
 
@@ -273,8 +285,8 @@ window.onload = function() {
               .textFont({ size: '14px', weight: 'bold' })
               .css({"text-align": "center"})
               .bind("KeyUp", function(e) {
-                  // Control menu? for now, let's start the fucking game
-                  if (e.key == 32) { //Space bar start game
+                  // Control menu? for now, let's start the game
+                  if (e.key == 32) { // Space bar start game
                       Crafty.scene('game');
                   }
               });
@@ -290,7 +302,7 @@ window.onload = function() {
               .css({"text-align": "center"});
     });
 
-    //Editor
+    // Editor
     Crafty.scene('editor', function() {
         Crafty.background("#000");
 
@@ -342,48 +354,55 @@ window.onload = function() {
         });
     });
 
-    //Main game
+    // Main game
     Crafty.scene('game', function() {
         Crafty.background("#000");
 
-        generateMap();
+        loadMap(__map);
+        
+        // Position the player in the starting point
         Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
-              .attr({x: Game.tile * 4 , y: Game.tile * 4, w: Game.tile, h: Game.tile, z: 666}) //resize ;)
+              .attr({x: Game.tile * Game.map.x, y: Game.tile * Game.map.y, w: Game.tile, h: Game.tile, z: 666})
               .fourway(Game.speed)
 
+              // Animations definition
               .reel("down", 500, 0, 0, 3)
               .reel("left", 500, 0, 1, 3)
               .reel("right", 500, 0, 2, 3)
               .reel("up", 500, 0, 3, 3)
-              .animate("down", -1)
 
+              // Detect collisions
               .collision()
-              /* .onHit("cacas", function(a){
-                  this.x -= this._speed[0] * Game.speed;
-                  this.y -= this._speed[1] * Game.speed;
-              }) */
+              .onHit("cosas", function(a) {
+                  this.x -= this._delta.x;
+                  this.y -= this._delta.y;
+                  this.pauseAnimation().resetAnimation();
+              })
 
+              // Events
+              .bind("NewDirection", function(a) {
+                  this._delta = a;
+                  console.log(a)
+              })
+              .bind("KeyUp", function(ev) {
+                  this.pauseAnimation().resetAnimation();
+              })
               .bind('Move', function(ev) {
                   if (ev._x < this.x && !this.isPlaying("right")) {
-                      this._speed = [1, 0];
                       this.animate("right", -1);
                   } else if (ev._x > this.x && !this.isPlaying("left")) {
                       this.animate("left", -1);
-                      this._speed = [-1, 0];
                   }
 
                   if (ev._y < this.y && !this.isPlaying("down")) {
                       this.animate("down", -1);
-                      this._speed = [0, -1];
                   } else if (ev._y > this.y && !this.isPlaying("up")) {
                       this.animate("up", -1);
-                      this._speed = [0, 1];
                   }
               });
-        
     });
 
 
     /* Start everything */
-    Crafty.scene("loading"); //Load scene first
+    Crafty.scene("loading"); // Load scene first
 }
