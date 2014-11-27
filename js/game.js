@@ -253,17 +253,12 @@ window.onload = function() {
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
-        Crafty.load(["gato.png", "sprite.png", "floor.png"], function() {
-            /* Creating sprites */
-            Crafty.sprite(16, "floor.png", {
-                piso: [0,0]
-            });
-            Crafty.sprite(Game.tile, "sprite.png", {
-                cosas: [0,0]
-            });
-            Crafty.sprite(Game.tile, "gato.png", {
-                gato: [0,0]
-            });
+        Crafty.load(["img/gato.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3"], function() {
+            // Create resources
+            Crafty.audio.add("music", "snd/elgato.mp3");
+            Crafty.sprite(16, "img/floor.png", { piso: [0,0] });
+            Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
+            Crafty.sprite(Game.tile, "img/gato.png", { gato: [0,0] });
 
             Crafty.scene("menu");
         });
@@ -356,8 +351,8 @@ window.onload = function() {
 
     // Main game
     Crafty.scene('game', function() {
+        // Load the map
         Crafty.background("#000");
-
         loadMap(__map);
         
         // Position the player in the starting point
@@ -374,32 +369,32 @@ window.onload = function() {
               // Detect collisions
               .collision()
               .onHit("cosas", function(a) {
-                  this.x -= this._delta.x;
-                  this.y -= this._delta.y;
+                  console.log(a)
+                  console.log("obj", a[0].obj._x, a[0].obj._y, "you", this._x, this._y)
+
+                  if (a[0].obj._x != this._x) this.x -= this._delta.x;
+                  if (a[0].obj._y != this._y) this.y -= this._delta.y;
+
                   this.pauseAnimation().resetAnimation();
               })
 
               // Events
               .bind("NewDirection", function(a) {
                   this._delta = a;
-                  console.log(a)
+                  if (a.x > 0) this.animate("right", -1);
+                  if (a.x < 0) this.animate("left", -1);
+                  if (a.y > 0) this.animate("down", -1);
+                  if (a.y < 0) this.animate("up", -1);
               })
               .bind("KeyUp", function(ev) {
                   this.pauseAnimation().resetAnimation();
               })
               .bind('Move', function(ev) {
-                  if (ev._x < this.x && !this.isPlaying("right")) {
-                      this.animate("right", -1);
-                  } else if (ev._x > this.x && !this.isPlaying("left")) {
-                      this.animate("left", -1);
-                  }
-
-                  if (ev._y < this.y && !this.isPlaying("down")) {
-                      this.animate("down", -1);
-                  } else if (ev._y > this.y && !this.isPlaying("up")) {
-                      this.animate("up", -1);
-                  }
+                  // Do we need code here?
               });
+
+        // Start!
+        Crafty.audio.play("music", -1);
     });
 
 
