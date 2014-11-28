@@ -253,13 +253,13 @@ window.onload = function() {
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
-        Crafty.load(["img/gato.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3", "snd/miau.mp3"], function() {
+        Crafty.load(["img/gato2.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3", "snd/miau.mp3"], function() {
             // Create resources (Using object for loading is more robust/efficient?)
             Crafty.audio.add("music", "snd/elgato.mp3");
             Crafty.audio.add("miau", "snd/miau.mp3");
             Crafty.sprite(16, "img/floor.png", { piso: [0,0] });
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
-            Crafty.sprite(Game.tile, "img/gato.png", { gato: [0,0] });
+            Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
 
             Crafty.scene("menu");
         });
@@ -370,11 +370,33 @@ window.onload = function() {
               // Detect collisions
               .collision()
               .onHit("cosas", function(a) {
-                  console.log(a)
-                  console.log("obj", a[0].obj._x, a[0].obj._y, "you", this._x, this._y)
+                  this.x -= this._delta.x;
+                  this.y -= this._delta.y;
 
-                  if (a[0].obj._x != this._x) this.x -= this._delta.x;
-                  if (a[0].obj._y != this._y) this.y -= this._delta.y;
+                  if (this._delta.x != 0 && this._delta.y != 0) {
+                      // Dummy ent
+                      var e = Crafty.e('2D, Collision').attr({x: this._x, y: this._y, w: this._w, h: this._h }).collision();
+                      /* Check directions */
+                      if (this._delta.x != 0) {
+                          e.x += this._delta.x;
+
+                          if (!e.hit('cosas')) {
+                              this.x += this._delta.x;
+                          }
+
+                          e.x -= this._delta.x;
+                      }
+
+                      if (this._delta.y != 0) {
+                          e.y += this._delta.y;
+
+                          if (!e.hit('cosas')) {
+                              this.y += this._delta.y;
+                          }
+                      }
+
+                      e.destroy();
+                  }
               })
 
               // Events
