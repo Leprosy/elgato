@@ -314,7 +314,7 @@ window.onload = function() {
               });
 
         // Start!
-        //Crafty.audio.play("music", -1);
+        Crafty.audio.play("music", -1);
     });
 
 
