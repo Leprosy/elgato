@@ -160,11 +160,15 @@ window.onload = function() {
     Crafty.scene("loading");
 }; */
 
-
+/* Global things */
 var Game = {};
 Game.tile = 32;
-Game.speed = 2; //Game.tile / 12;
+Game.speed = 2;
 Game.map = {};
+
+// Tracking scores
+Game.score = {};
+Game.score.sofa = 0;
 
 
 /* Extras : editor and map */
@@ -203,31 +207,30 @@ window.onload = function() {
 
     /* Utils */
     function loadMap(map) {
-
         try {
             Game.map = map;
             var i, j;
-    
+
             // Load things and floors
             for (i = 0; i < Game.map.floors.length; ++i) {
                 var data = Game.map.floors[i];
                 var it = floorOff(data[2]);
-    
+
                 Crafty.e('2D, Canvas, piso, Sprite')
                       .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 0})
                       .sprite(it[0], it[1]);
             }
-    
+
             for (i = 0; i < Game.map.things.length; ++i) {
                 var data = Game.map.things[i];
                 var it = thingOff(data[2]);
-    
+
                 Crafty.e('2D, Canvas, cosas, Sprite')
-                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 1})
+                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 1, _itemId: data[2], _catHits: 0})
                       .sprite(it[0], it[1]);
             }
-    
-            console.log('Map generated');
+
+            console.info('Map generated');
         } catch(e) {
             alert("Invalid map data");
             console.log("Error data", e);
@@ -355,7 +358,7 @@ window.onload = function() {
         // Load the map
         Crafty.background("#000");
         loadMap(__map);
-        
+
         // Position the player in the starting point
         Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
               .attr({x: Game.tile * Game.map.x, y: Game.tile * Game.map.y, w: Game.tile, h: Game.tile, z: 666})
@@ -402,8 +405,13 @@ window.onload = function() {
               // Events
               .bind("NewDirection", function(a) {
                   this._delta = a;
+
                   //Pause cat?
-                  if (a.x == 0 && a.y == 0) this.pauseAnimation().resetAnimation();
+                  if (a.x == 0 && a.y == 0) {
+                      this.pauseAnimation().resetAnimation();
+                  } else {
+                      this._facing = {x: a.x, y: a.y};
+                  }
 
                   // Else, animate cat in the right direction
                   if (a.x > 0) this.animate("right", -1);
@@ -416,9 +424,38 @@ window.onload = function() {
               })
               .bind("KeyDown", function(ev) {
                   if (ev.key == 32) { // Space bar -> command cat
-                      // For now, annoy humans!
-                      console.log("Miau");
-                      Crafty.audio.play("miau", 1);
+                      // Get what is in front of me
+                      var e = Crafty.e('2D, Collision').attr({
+                          x: this._x + (this._facing.x * (Game.tile / 2)) + this._w / 2,
+                          y: this._y + (this._facing.y * (Game.tile / 2)) + this._h / 2,
+                          w: 1, h: 1 }).collision();
+
+                      var thing = e.hit('cosas');
+                      var touchSomething = false;
+                      console.log(thing)
+
+                      if (thing.length == 1) {
+                          console.log("Hay algo", thing[0].obj._itemId);
+
+                          switch(thing[0].obj._itemId) {
+                              case 15: // Sofa
+                              case 6:
+                                  Game.score.sofa ++;
+                                  console.log("Sofa", Game.score.sofa);
+                                  touchSomething = true;
+                                  break;
+                              case 7: // Plant
+                                  console.log("Plant");
+                                  touchSomething = true;
+                                  break;
+                          }
+                      }
+
+                      if (!touchSomething) { // nothing was touched by our little friend
+                          // just annoy humans!
+                          console.log("Miau");
+                          Crafty.audio.play("miau", 1);
+                      }
                   } 
               })
               .bind('Move', function(ev) {
@@ -426,7 +463,7 @@ window.onload = function() {
               });
 
         // Start!
-        //Crafty.audio.play("music", -1);
+        Crafty.audio.play("music", -1);
     });
 
 
