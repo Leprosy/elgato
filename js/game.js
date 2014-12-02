@@ -94,24 +94,33 @@ window.onload = function() {
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
-        Crafty.load(["img/gato2.png", "img/sprite.png", "img/floor.png", "snd/elgato.mp3", "snd/miau.mp3", "snd/rasgar.mp3"], function() {
-            // Create resources (Using object for loading is more robust/efficient?)
-            Crafty.audio.add("music", "snd/elgato.mp3");
-            Crafty.audio.add("miau", "snd/miau.mp3");
-            Crafty.audio.add("rasgar", "snd/rasgar.mp3");
+        var loadObj = {
+            "audio": {
+                "miau": "snd/miau.mp3",
+                "rasgar": "snd/rasgar.mp3",
+                "music": "snd/elgato.mp3"
+            },
+            "images": ["img/gato2.png", "img/sprite.png", "img/floor.png"]
+            /*"sprites": definition only valid for the callback of loader (why?) */
+        };
+
+        Crafty.load(loadObj, function() {
+            // On load
+            // Create sprites
             Crafty.sprite(16, "img/floor.png", { piso: [0,0] });
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
             Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
 
+            // Ready, fire main menu
+            Crafty.audio.play("miau", 1);
             Crafty.scene("menu");
+        }, function(e) {
+            // On progress
+            console.log(e);
+        }, function(e) {
+            // On error
+            console.debug(e);
         });
-
-        // Black background with some loading text
-        Crafty.background("#000");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
-              .text("Loading...")
-              .textColor('#FFFFFF')
-              .css({"text-align": "center"});
     });
 
     // Main menu
@@ -139,6 +148,8 @@ window.onload = function() {
               .textFont({ size: '14px', weight: 'bold' })
               .css({"text-align": "center"});
     });
+
+
 
     // Editor
     Crafty.scene('editor', function() {
@@ -192,6 +203,9 @@ window.onload = function() {
         });
     });
 
+
+
+
     // Main game
     Crafty.scene('game', function() {
         // Load the map
@@ -200,7 +214,7 @@ window.onload = function() {
 
         // Position the player in the starting point
         Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
-              .attr({x: Game.tile * Game.map.x, y: Game.tile * Game.map.y, w: Game.tile, h: Game.tile, z: 666})
+              .attr({x: Game.tile * Game.map.x, y: Game.tile * Game.map.y, w: Game.tile, h: Game.tile, z: 666, _facing: {x:0, y:0} })
               .fourway(Game.speed)
 
               // Animations definition
@@ -280,7 +294,10 @@ window.onload = function() {
                           switch(cosa._itemId) {
                               case 15: // Sofa
                               case 6:
-                                  Crafty.audio.play("rasgar", 1);
+                                  if (!Crafty.audio.isPlaying("rasgar")) {
+                                      Crafty.audio.play("rasgar", 1);
+                                  }
+
                                   Game.score.sofa ++;
                                   console.log("Sofa", Game.score.sofa);
                                   touchSomething = true;
@@ -305,7 +322,9 @@ window.onload = function() {
                       if (!touchSomething) { // nothing was touched by our little friend
                           // just annoy humans!
                           console.log("Miau");
-                          Crafty.audio.play("miau", 1);
+                          if (!Crafty.audio.isPlaying("miau")) {
+                              Crafty.audio.play("miau", 1);
+                          }
                       }
                   } 
               })
@@ -314,7 +333,7 @@ window.onload = function() {
               });
 
         // Start!
-        Crafty.audio.play("music", -1);
+        //Crafty.audio.play("music", -1);
     });
 
 
