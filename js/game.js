@@ -222,6 +222,10 @@ window.onload = function() {
               .reel("left", 200, 0, 1, 3)
               .reel("right", 200, 0, 2, 3)
               .reel("up", 200, 0, 3, 3)
+              .reel("down-rip", 400, 0, 4, 3)
+              .reel("left-rip", 400, 0, 5, 3)
+              .reel("right-rip", 400, 0, 6, 3)
+              .reel("up-rip", 400, 0, 7, 3)
 
               // Detect collisions
               .collision()
@@ -277,6 +281,13 @@ window.onload = function() {
               })
               .bind("KeyDown", function(ev) {
                   if (ev.key == 32) { // Space bar -> command cat
+                      // Do action only if cat is idle
+                      if (this.getReel().id.search("rip") >= 0 && this.isPlaying()) {
+                          return;
+                      } else {
+                          this.animate(this._currentReelId.replace("-rip", "") + "-rip", 1);
+                      }
+
                       // Get what is in front of me
                       var e = Crafty.e('2D, Collision').attr({
                           x: this._x + (this._facing.x * (Game.tile / 2)) + this._w / 2,
@@ -287,7 +298,7 @@ window.onload = function() {
                       var touchSomething = false;
 
                       if (thing.length == 1) {
-                          var cosa = thing[0].obj; 
+                          var cosa = thing[0].obj;
                           cosa._catHits++;
                           console.log("Hay algo", cosa);
 
@@ -308,7 +319,6 @@ window.onload = function() {
                                       var it = thingOff(newId);
                                       cosa.sprite(it[0], it[1]);
                                       cosa._itemId = newId;
-                                      
                                   }
 
                                   break;
@@ -321,16 +331,27 @@ window.onload = function() {
 
                       if (!touchSomething) { // nothing was touched by our little friend
                           // just annoy humans!
-                          console.log("Miau");
                           if (!Crafty.audio.isPlaying("miau")) {
+                              console.log("Miau");
                               Crafty.audio.play("miau", 1);
                           }
                       }
-                  } 
+                  }
+              })
+              .bind("StartAnimation", function(a, b, c) {
+                  if (a.id.search("rip") >= 0) {
+                      this.disableControl();
+                  }
+              })
+              .bind("AnimationEnd", function(a, b, c) {
+                  if (a.id.search("rip") >= 0) {
+                      this.enableControl();
+                  }
               })
               .bind('Move', function(ev) {
                   // Do we need code here?
               });
+
 
         // Start!
         //Crafty.audio.play("music", -1);
