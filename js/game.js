@@ -112,7 +112,7 @@ window.onload = function() {
             Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
 
             // Ready, fire main menu
-            Crafty.audio.play("miau", 1);
+            //Crafty.audio.play("miau", 1);
             Crafty.scene("menu");
         }, function(e) {
             // On progress
@@ -212,9 +212,20 @@ window.onload = function() {
         Crafty.background("#000");
         loadMap(__map);
 
-        // Position the player in the starting point
+        // Creating the player in the starting point
         Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
-              .attr({x: Game.tile * Game.map.x, y: Game.tile * Game.map.y, w: Game.tile, h: Game.tile, z: 666, _facing: {x:0, y:0} })
+              .attr({x: Game.tile * Game.map.x,
+                     y: Game.tile * Game.map.y,
+                     w: Game.tile, h: Game.tile, z: 666,
+                     _facing: { x: 0, y: 0 },
+                     _action: false,
+                     _faceAnim: function() {
+                         if (this._facing.x > 0) this.animate("right", -1);
+                         if (this._facing.x < 0) this.animate("left", -1);
+                         if (this._facing.y > 0) this.animate("down", -1);
+                         if (this._facing.y < 0) this.animate("up", -1);
+                     }
+              })
               .fourway(Game.speed)
 
               // Animations definition
@@ -222,36 +233,37 @@ window.onload = function() {
               .reel("left", 200, 0, 1, 3)
               .reel("right", 200, 0, 2, 3)
               .reel("up", 200, 0, 3, 3)
-              .reel("down-rip", 400, 0, 4, 3)
-              .reel("left-rip", 400, 0, 5, 3)
-              .reel("right-rip", 400, 0, 6, 3)
-              .reel("up-rip", 400, 0, 7, 3)
+              .reel("down-rip", 800, 0, 4, 3)
+              .reel("left-rip", 800, 0, 5, 3)
+              .reel("right-rip", 800, 0, 6, 3)
+              .reel("up-rip", 800, 0, 7, 3)
 
               // Detect collisions
               .collision()
               .onHit("cosas", function(a) {
-                  this.x -= this._delta.x;
-                  this.y -= this._delta.y;
+                  this.x -= this._facing.x;
+                  this.y -= this._facing.y;
 
-                  if (this._delta.x != 0 && this._delta.y != 0) {
+                  if (this._facing.x != 0 && this._facing.y != 0) {
                       // Dummy ent
                       var e = Crafty.e('2D, Collision').attr({x: this._x, y: this._y, w: this._w, h: this._h }).collision();
-                      /* Check directions */
-                      if (this._delta.x != 0) {
-                          e.x += this._delta.x;
+
+                      // Check directions
+                      if (this._facing.x != 0) {
+                          e.x += this._facing.x;
 
                           if (!e.hit('cosas')) {
-                              this.x += this._delta.x;
+                              this.x += this._facing.x;
                           }
 
-                          e.x -= this._delta.x;
+                          e.x -= this._facing.x;
                       }
 
-                      if (this._delta.y != 0) {
-                          e.y += this._delta.y;
+                      if (this._facing.y != 0) {
+                          e.y += this._facing.y;
 
                           if (!e.hit('cosas')) {
-                              this.y += this._delta.y;
+                              this.y += this._facing.y;
                           }
                       }
 
@@ -261,26 +273,28 @@ window.onload = function() {
 
               // Events
               .bind("NewDirection", function(a) {
-                  this._delta = a;
+                  this._facing = {x: a.x, y: a.y};
+
+                  if (this._action) return; // If no action is being performed
 
                   //Pause cat?
                   if (a.x == 0 && a.y == 0) {
                       this.pauseAnimation().resetAnimation();
-                  } else {
-                      this._facing = {x: a.x, y: a.y};
                   }
 
                   // Else, animate cat in the right direction
-                  if (a.x > 0) this.animate("right", -1);
-                  if (a.x < 0) this.animate("left", -1);
-                  if (a.y > 0) this.animate("down", -1);
-                  if (a.y < 0) this.animate("up", -1);
-              })
-              .bind("KeyUp", function(ev) {
-                  // Need this?
+                  this._faceAnim();
               })
               .bind("KeyDown", function(ev) {
+                  if (this._action) return; // If no action is being performed
+
                   if (ev.key == 32) { // Space bar -> command cat
+                      console.log("Miau");
+                      this.disableControl();
+                      this._action = true;
+                      this.animate(this._currentReelId.replace("-rip", "") + "-rip", 1);
+
+                      /*
                       // Do action only if cat is idle
                       if (this.getReel().id.search("rip") >= 0 && this.isPlaying()) {
                           return;
@@ -306,7 +320,7 @@ window.onload = function() {
                               case 15: // Sofa
                               case 6:
                                   if (!Crafty.audio.isPlaying("rasgar")) {
-                                      Crafty.audio.play("rasgar", 1);
+                                      //Crafty.audio.play("rasgar", 1);
                                   }
 
                                   Game.score.sofa ++;
@@ -332,26 +346,20 @@ window.onload = function() {
                       if (!touchSomething) { // nothing was touched by our little friend
                           // just annoy humans!
                           if (!Crafty.audio.isPlaying("miau")) {
-                              console.log("Miau");
-                              Crafty.audio.play("miau", 1);
+                              //Crafty.audio.play("miau", 1);
                           }
-                      }
+                      }*/
                   }
               })
-              .bind("StartAnimation", function(a, b, c) {
-                  if (a.id.search("rip") >= 0) {
-                      this.disableControl();
-                  }
-              })
-              .bind("AnimationEnd", function(a, b, c) {
-                  if (a.id.search("rip") >= 0) {
-                      this.enableControl();
-                  }
-              })
-              .bind('Move', function(ev) {
-                  // Do we need code here?
-              });
 
+              .bind("AnimationEnd", function(a) {
+                  // If action animation ended, set action flag false
+                  if (a.id.search("rip") >= 0) {
+                      this._action = false;
+                      this.enableControl();
+                      this._faceAnim();
+                  }
+              })
 
         // Start!
         //Crafty.audio.play("music", -1);
