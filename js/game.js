@@ -219,6 +219,9 @@ window.onload = function() {
                      w: Game.tile, h: Game.tile, z: 666,
                      _facing: { x: 0, y: 0 },
                      _action: false,
+                     _idle: false,
+
+                     // Perhaps these must be refactored in a component
                      _faceAnim: function() {
                          if (this._facing.x > 0) this.animate("right", -1);
                          if (this._facing.x < 0) this.animate("left", -1);
@@ -233,10 +236,10 @@ window.onload = function() {
               .reel("left", 200, 0, 1, 3)
               .reel("right", 200, 0, 2, 3)
               .reel("up", 200, 0, 3, 3)
-              .reel("down-rip", 800, 0, 4, 3)
-              .reel("left-rip", 800, 0, 5, 3)
-              .reel("right-rip", 800, 0, 6, 3)
-              .reel("up-rip", 800, 0, 7, 3)
+              .reel("down-rip", 500, 0, 4, 3)
+              .reel("left-rip", 500, 0, 5, 3)
+              .reel("right-rip", 500, 0, 6, 3)
+              .reel("up-rip", 500, 0, 7, 3)
 
               // Detect collisions
               .collision()
@@ -273,40 +276,34 @@ window.onload = function() {
 
               // Events
               .bind("NewDirection", function(a) {
-                  this._facing = {x: a.x, y: a.y};
+                  if (a.x != 0 || a.y != 0) {
+                      this._idle = false;
+                      this._facing = { x: a.x, y: a.y };
 
-                  if (this._action) return; // If no action is being performed
+                      if (!this._action) {
+                          this._faceAnim();
+                      }
+                  } else {
+                      this._idle = true;
 
-                  //Pause cat?
-                  if (a.x == 0 && a.y == 0) {
-                      this.pauseAnimation().resetAnimation();
+                      if (!this._action) {
+                          this.pauseAnimation().resetAnimation();
+                      }
                   }
-
-                  // Else, animate cat in the right direction
-                  this._faceAnim();
               })
               .bind("KeyDown", function(ev) {
-                  if (this._action) return; // If no action is being performed
-
                   if (ev.key == 32) { // Space bar -> command cat
-                      console.log("Miau");
+                      if (this._action) return; // if action is being performed, abort
+
                       this.disableControl();
                       this._action = true;
                       this.animate(this._currentReelId.replace("-rip", "") + "-rip", 1);
 
-                      /*
-                      // Do action only if cat is idle
-                      if (this.getReel().id.search("rip") >= 0 && this.isPlaying()) {
-                          return;
-                      } else {
-                          this.animate(this._currentReelId.replace("-rip", "") + "-rip", 1);
-                      }
-
                       // Get what is in front of me
                       var e = Crafty.e('2D, Collision').attr({
-                          x: this._x + (this._facing.x * (Game.tile / 2)) + this._w / 2,
-                          y: this._y + (this._facing.y * (Game.tile / 2)) + this._h / 2,
-                          w: 1, h: 1 }).collision();
+                          x: (this._x + this._w / 2) + (this._w * this._facing.x * 1.1 / 4),
+                          y: (this._y + this._h / 2) + (this._h * this._facing.y * 1.1 / 4),
+                          w: 2, h: 2 }).collision();
 
                       var thing = e.hit('cosas');
                       var touchSomething = false;
@@ -314,7 +311,6 @@ window.onload = function() {
                       if (thing.length == 1) {
                           var cosa = thing[0].obj;
                           cosa._catHits++;
-                          console.log("Hay algo", cosa);
 
                           switch(cosa._itemId) {
                               case 15: // Sofa
@@ -348,7 +344,7 @@ window.onload = function() {
                           if (!Crafty.audio.isPlaying("miau")) {
                               //Crafty.audio.play("miau", 1);
                           }
-                      }*/
+                      }
                   }
               })
 
@@ -357,7 +353,10 @@ window.onload = function() {
                   if (a.id.search("rip") >= 0) {
                       this._action = false;
                       this.enableControl();
-                      this._faceAnim();
+
+                      if (!this._idle) {
+                          this._faceAnim();
+                      }
                   }
               })
 
