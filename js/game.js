@@ -1,7 +1,8 @@
 /* Global things */
 var Game = {};
-Game.tile = 32;
-Game.speed = 2;
+Game.tile = 32; //size used for creating sprites
+Game.size = 64; //size used for actual display
+Game.speed = Game.size / 16;
 Game.map = {};
 
 // Tracking scores
@@ -40,7 +41,7 @@ function serializeMap() {
 /* Entry point */
 window.onload = function() {
     /* Start crafty */
-    Crafty.init(Game.tile * 40, Game.tile * 20, 'game');
+    Crafty.init(Game.size * 12, Game.size * 12, 'game');
     Crafty.background('#004');
 
     /* Utils */
@@ -55,7 +56,7 @@ window.onload = function() {
                 var it = floorOff(data[2]);
 
                 Crafty.e('2D, Canvas, piso, Sprite')
-                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 0})
+                      .attr({x: data[0] * Game.size, y: data[1] * Game.size, w: Game.size, h: Game.size, z: 0})
                       .sprite(it[0], it[1]);
             }
 
@@ -64,7 +65,8 @@ window.onload = function() {
                 var it = thingOff(data[2]);
 
                 Crafty.e('2D, Canvas, cosas, Sprite')
-                      .attr({x: data[0] * Game.tile, y: data[1] * Game.tile, w: Game.tile, h: Game.tile, z: 1, _itemId: data[2], _catHits: 0})
+                      .attr({x: data[0] * Game.size, y: data[1] * Game.size, w: Game.size, h: Game.size, z: 1,
+                             _itemId: data[2], _catHits: 0})
                       .sprite(it[0], it[1]);
             }
 
@@ -107,7 +109,7 @@ window.onload = function() {
         Crafty.load(loadObj, function() {
             // On load
             // Create sprites
-            Crafty.sprite(16, "img/floor.png", { piso: [0,0] });
+            Crafty.sprite(Game.tile, "img/floor.png", { piso: [0,0] });
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
             Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
 
@@ -213,10 +215,10 @@ window.onload = function() {
         loadMap(__map);
 
         // Creating the player in the starting point
-        Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
-              .attr({x: Game.tile * Game.map.x,
-                     y: Game.tile * Game.map.y,
-                     w: Game.tile, h: Game.tile, z: 666,
+        var gato = Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision')
+              .attr({x: Game.size * Game.map.x,
+                     y: Game.size * Game.map.y,
+                     w: Game.size, h: Game.size, z: 666,
                      _facing: { x: 0, y: 0 },
                      _action: false,
                      _idle: false,
@@ -358,7 +360,11 @@ window.onload = function() {
                           this._faceAnim();
                       }
                   }
-              })
+              });
+
+        // Follow the cat
+        Crafty.viewport.clampToEntities = false
+        Crafty.viewport.follow(gato, 0, 0);
 
         // Start!
         //Crafty.audio.play("music", -1);
