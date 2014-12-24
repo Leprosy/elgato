@@ -6,6 +6,7 @@ Game.speed = Game.size / 16;
 Game.map = {};
 
 // Tracking scores
+Game.lives = 3;
 Game.score = {};
 Game.score.sofa = 0;
 
@@ -14,7 +15,8 @@ Game.score.sofa = 0;
 //this must be loaded elsewhere(json, ajax?) 
 var __map = { x: 10, y: 8,
         things: [[8,7,6],[8,8,15],[8,9,7],[8,5,13],[9,5,13],[10,5,13],[8,4,4],[9,4,4],[10,4,4],[7,4,1],[7,5,1],[7,6,1],[7,7,1],[7,8,1],[7,9,1],[7,10,1],[8,10,4],[9,10,4],[10,10,4],[11,4,0],[11,5,0],[11,6,3],[12,6,3],[11,7,13],[12,7,13],[12,5,1],[12,4,1],[13,4,2],[14,4,2],[15,4,0],[15,5,0],[15,6,0],[15,7,0],[15,8,0],[15,9,0],[15,10,0],[11,10,4],[12,10,4],[13,10,4],[14,10,4],[13,5,11],[14,5,11]],
-        floors: [[8,7,0],[9,7,0],[8,8,0],[8,9,0],[9,9,0],[9,8,0],[10,7,0],[10,8,0],[10,9,0],[8,6,0],[9,6,0],[10,6,0],[11,8,0],[12,8,0],[11,9,0],[12,9,0],[13,6,11],[14,6,11],[13,7,11],[14,7,11],[13,8,0],[14,8,0],[13,9,0],[14,9,0]]
+        floors: [[8,7,0],[9,7,0],[8,8,0],[8,9,0],[9,9,0],[9,8,0],[10,7,0],[10,8,0],[10,9,0],[8,6,0],[9,6,0],[10,6,0],[11,8,0],[12,8,0],[11,9,0],[12,9,0],[13,6,11],[14,6,11],[13,7,11],[14,7,11],[13,8,0],[14,8,0],[13,9,0],[14,9,0]],
+        enemies: [[14, 6]]
     };
 
 function serializeMap() {
@@ -92,6 +94,10 @@ window.onload = function() {
         return getOffset(i, 9, 9);
     }
 
+    function resetView() {
+        Crafty.viewport.x = 0;
+        Crafty.viewport.y = 0;
+    }
 
     /* Scenes */
     // The loading screen
@@ -127,6 +133,8 @@ window.onload = function() {
 
     // Main menu
     Crafty.scene("menu", function() {
+        resetView();
+
         Crafty.background("#004");
         Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
               .text("MALDAD DEL GATO<br />El juego<br />(oprima la barra)")
@@ -143,7 +151,9 @@ window.onload = function() {
 
     // The end!
     Crafty.scene("end", function() {
-        Crafty.background("#004");
+        resetView();
+
+        Crafty.background("#000044");
         Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
               .text("¡FIN!")
               .textColor('#FF0000')
@@ -303,8 +313,8 @@ window.onload = function() {
 
                       // Get what is in front of me
                       var e = Crafty.e('2D, Collision').attr({
-                          x: (this._x + this._w / 2) + (this._w * this._facing.x * 1.1 / 4),
-                          y: (this._y + this._h / 2) + (this._h * this._facing.y * 1.1 / 4),
+                          x: (this._x + this._w / 2) + (this._w * this._facing.x * 1.1 / (2 * Game.speed)),
+                          y: (this._y + this._h / 2) + (this._h * this._facing.y * 1.1 / (2 * Game.speed)),
                           w: 2, h: 2 }).collision();
 
                       var thing = e.hit('cosas');
@@ -361,6 +371,19 @@ window.onload = function() {
                       }
                   }
               });
+        
+        // Create map enemies
+        for (i = 0; i < Game.map.enemies.length; ++i) {
+            var pos = Game.map.enemies[i];
+
+            Crafty.e('2D, Canvas, Color, Collision')
+                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size, w: Game.size })
+                  .color('#FF0000')
+                  .collision()
+                  .onHit("gato", function(a) {
+                      Crafty.scene('end');
+                  });
+        }
 
         // Follow the cat
         Crafty.viewport.clampToEntities = false
