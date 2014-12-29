@@ -371,19 +371,65 @@ window.onload = function() {
                       }
                   }
               });
-        
+
         // Create map enemies
         for (i = 0; i < Game.map.enemies.length; ++i) {
             var pos = Game.map.enemies[i];
 
+            // Refactor this in a component(function calls as attributes, please...)
             Crafty.e('2D, Canvas, Color, Collision')
-                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size, w: Game.size })
+                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.6, w: Game.size * 0.6,
+                          _facing: null,
+                          _setDir: function() {
+                                       var speed = Math.round(Math.random()) == 0 ? 1 : -1;
+
+                                       if (Math.round(Math.random()) == 0) {
+                                           this._facing = [0, speed];
+                                       } else {
+                                           this._facing = [speed, 0];
+                                       }
+                                   }
+                          }),
+                          _setDir2: function() {
+                                          var deltas = [gato._x - this._x, gato._y - this._y];
+            
+                                          if (deltas[0] > deltas[1]) { // chase the longest difference
+                                              this._facing[0] = (deltas[0] < 0) ? -1 : 1;
+                                          } else {
+                                              this._facing[1] = (deltas[1] < 0) ? -1 : 1;
+                                          }
+                                      }
+                            })
                   .color('#FF0000')
                   .collision()
                   .onHit("gato", function(a) {
-                      Crafty.scene('end');
-                  });
+                      //Crafty.scene('end');
+                  })
+                  .onHit("cosas", function(a) {
+                      // Take step back then switch to another direction
+                      this.x -= this._facing[0] * Game.speed;
+                      this.y -= this._facing[1] * Game.speed;
+                      this._setDir();
+                  })
+                  .bind('EnterFrame', function(a, b, c) {
+                      // Dumb Random AI 1 : Follow a random direction, stop on collision, switch direction.
+                      if (!this._facing) {
+                          this._setDir();
+                      }
+
+                      // Sometimes make a switch
+                      if (Math.round(Math.random() * 30) == 0) {
+                          this._setDir();
+                      }
+
+                      // Make a step
+                      this.x += this._facing[0] * Game.speed;
+                      this.y += this._facing[1] * Game.speed;
+                  })
         }
+
+        // Timer
+        Crafty.timer
 
         // Follow the cat
         Crafty.viewport.clampToEntities = false
