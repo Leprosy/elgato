@@ -388,8 +388,7 @@ window.onload = function() {
                                        } else {
                                            this._facing = [speed, 0];
                                        }
-                                   }
-                          }),
+                                   },
                           _setDir2: function() {
                                           var deltas = [gato._x - this._x, gato._y - this._y];
             
