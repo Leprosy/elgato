@@ -99,6 +99,8 @@ window.onload = function() {
         Crafty.viewport.y = 0;
     }
 
+
+
     /* Components */
     Crafty.c("GEntity", {
         _facing: false,
@@ -109,9 +111,13 @@ window.onload = function() {
     });
 
     Crafty.c("GEnemy", {
-        init: function() {
+        enemyInit: function(gato) {
+            // Init things
+            this.color(this._id == 1 ? '#FF0000' : '#0000FF');
+            this.gato = gato;
             this.collision();
 
+            // Bind events & collision system
             this.onHit("gato", function(a) {
                 console.log("¡GATO!");
                 //Crafty.scene('end');
@@ -123,10 +129,14 @@ window.onload = function() {
                 this.y -= this._facing.y * Game.speed;
                 this._setDir();
             });
+
+            this.bind('EnterFrame', this.seek);
+            this._setDir();
         }
     });
 
     Crafty.c("GAI1", {
+        // Dumb Random AI 1 : Follow a random direction, stop on collision, switch direction.
         _setDir: function() {
             var speed = Math.round(Math.random()) == 0 ? 1 : -1;
 
@@ -137,61 +147,60 @@ window.onload = function() {
             }
         },
 
-        init: function() {
-            this.color('#FF0000');
-            this.bind('EnterFrame', function(a, b, c) {
-                // Dumb Random AI 1 : Follow a random direction, stop on collision, switch direction.
-                if (this._facing.x == 0 && this._facing.y == 0) {
-                    this._setDir();
-                }
+        seek: function() {
+            // Sometimes make a switch
+            if (Math.round(Math.random() * 30) == 0) {
+                console.log("RANDOM SWITCH")
+                this._setDir();
+            }
 
-                // Sometimes make a switch
-                if (Math.round(Math.random() * 30) == 0) {
-                    console.log("RANDOM SWITCH")
-                    this._setDir();
-                }
-
-                // Make a step
-                this.x += this._facing.x * Game.speed;
-                this.y += this._facing.y * Game.speed;
-            });
+            // Make a step
+            this.x += this._facing.x * Game.speed;
+            this.y += this._facing.y * Game.speed;
         }
     });
 
     Crafty.c("GAI2", {
+        // Pseudo Smart AI  : Try to align with the cat and chase it
         _setDir: function() {
-            var speed = Math.round(Math.random()) == 0 ? 1 : -1;
+            // Choose the least difference
+            var diff = [this.gato._x - this._x, this.gato._y - this._y];
 
-            if (Math.round(Math.random()) == 0) {
-                this._facing = { x: 0, y: speed };
+            if (Math.abs(diff[0]) < Math.abs(diff[1])) { //horizontal is less
+                this._facing = { x: diff[0] > 0 ? 1 : -1, y: 0 };
             } else {
-                this._facing = { x: speed, y: 0 };
+                this._facing = { x: 0, y: diff[1] > 0 ? 1 : -1 };
             }
         },
 
-        init: function() {
-            this.color('#0000FF');
-            this.bind('EnterFrame', function(a, b, c) {
-                // Dumb Random AI 1 : Follow a random direction, stop on collision, switch direction.
-                if (this._facing.x == 0 && this._facing.y == 0) {
-                    this._setDir();
-                }
+        _switchX: function() {
+            if (this._facing.x == 0) {
+                this._facing = { x: this._facing.y, y: 0};
+            } else {
+                this._facing = { y: this._facing.x, x: 0};
+            }
+        },
 
-                // AI 1 : Sometimes make a switch
-                if (Math.round(Math.random() * 30) == 0) {
-                    console.log("RANDOM SWITCH")
-                    this._setDir();
-                }
-                /* AI 2 : When aligned to the cat, also make a switch
-                if (this._x == gato._x || this._y == gato._y) {
-                    console.log('GOTCHA')
-                    this._setDir2();
-                } */
+        _switchY: function() {
+            if (this._facing.x == 0) {
+                this._facing = { x: this._facing.y, y: 0};
+            } else {
+                this._facing = { y: this._facing.x, x: 0};
+            }
+        },
 
-                // Make a step
-                this.x += this._facing.x * Game.speed;
-                this.y += this._facing.y * Game.speed;
-            });
+        seek: function() {
+            // When aligned to the cat, also make a switch
+            if (this._x == this.gato._x) {
+                this._switchY();
+            }
+            if (this._y == this.gato._y) {
+                this._switchX();
+            }
+
+            // Make a step
+            this.x += this._facing.x * Game.speed;
+            this.y += this._facing.y * Game.speed;
         }
     });
 
@@ -473,7 +482,8 @@ window.onload = function() {
 
             // Refactor this in a component(function calls as attributes, please...)
             Crafty.e('2D, Canvas, Color, Collision, GEntity, GEnemy, GAI' + pos[2])
-                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.6, w: Game.size * 0.6 });
+                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.6, w: Game.size * 0.6, _id: pos[2] })
+                  .enemyInit(gato);
         }
 
 
