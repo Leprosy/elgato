@@ -163,44 +163,34 @@ window.onload = function() {
     Crafty.c("GAI2", {
         // Pseudo Smart AI  : Try to align with the cat and chase it
         _setDir: function() {
-            // Choose the least difference
-            var diff = [this.gato._x - this._x, this.gato._y - this._y];
-
-            if (Math.abs(diff[0]) < Math.abs(diff[1])) { //horizontal is less
-                this._facing = { x: diff[0] > 0 ? 1 : -1, y: 0 };
+            if (this._x + Game.tile / 2 == this.gato._x) {
+                this._seekY();
             } else {
-                this._facing = { x: 0, y: diff[1] > 0 ? 1 : -1 };
+                if (this._y + Game.tile / 2 == this.gato._y) {
+                    this._seekX();
+                } else {
+                    // Default chase
+                    //this._facing = { x: 0, y: 0 };
+                }
             }
         },
-
-        _switchX: function() {
-            if (this._facing.x == 0) {
-                this._facing = { x: this._facing.y, y: 0};
-            } else {
-                this._facing = { y: this._facing.x, x: 0};
-            }
+        _seekX: function() {
+            console.log("SEEK X")
+            var delta = this.gato.x < this._x ? -1 : 1;
+            this._facing = { x: delta, y: 0 };
         },
-
-        _switchY: function() {
-            if (this._facing.x == 0) {
-                this._facing = { x: this._facing.y, y: 0};
-            } else {
-                this._facing = { y: this._facing.x, x: 0};
-            }
+        _seekY: function() {
+            console.log("SEEK Y")
+            var delta = this.gato.y < this._y ? -1 : 1;
+            this._facing = { y: delta, x: 0 };            
         },
 
         seek: function() {
-            // When aligned to the cat, also make a switch
-            if (this._x == this.gato._x) {
-                this._switchY();
-            }
-            if (this._y == this.gato._y) {
-                this._switchX();
-            }
 
             // Make a step
             this.x += this._facing.x * Game.speed;
             this.y += this._facing.y * Game.speed;
+            this._setDir();
         }
     });
 
