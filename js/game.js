@@ -127,6 +127,7 @@ window.onload = function() {
                 // Take step back then switch to another direction
                 this.x -= this._facing.x * Game.speed;
                 this.y -= this._facing.y * Game.speed;
+                this._facing = { x: 0, y: 0 };
                 this._setDir();
             });
 
@@ -162,34 +163,43 @@ window.onload = function() {
 
     Crafty.c("GAI2", {
         // Pseudo Smart AI  : Try to align with the cat and chase it
-        _setDir: function() {
-            if (this._x + Game.tile / 2 == this.gato._x) {
-                this._seekY();
-            } else {
-                if (this._y + Game.tile / 2 == this.gato._y) {
-                    this._seekX();
-                } else {
-                    // Default chase
-                    //this._facing = { x: 0, y: 0 };
-                }
+        _seekY: function() {
+            var diff = this._y - this.gato._y;
+
+            this._facing = {
+                y: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
+                x: 0
             }
         },
         _seekX: function() {
-            console.log("SEEK X")
-            var delta = this.gato.x < this._x ? -1 : 1;
-            this._facing = { x: delta, y: 0 };
+            var diff = this._x - this.gato._x;
+
+            this._facing = {
+                x: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
+                y: 0
+            }
         },
-        _seekY: function() {
-            console.log("SEEK Y")
-            var delta = this.gato.y < this._y ? -1 : 1;
-            this._facing = { y: delta, x: 0 };            
+        _setDir: function() {
+            if (this._x == this.gato._x) {
+                console.log("Match X")
+                this._seekY();
+            } else if (this._y == this.gato._y) {
+                console.log("Match Y")
+                this._seekX();
+            } else if (this._facing.x == 0 && this._facing.y == 0) {
+                // Select randomly direction to match
+                if (Math.round(Math.random()) == 0) {
+                    this._seekX()
+                } else {
+                    this._seekY()
+                }
+            }
         },
 
         seek: function() {
-
             // Make a step
-            this.x += this._facing.x * Game.speed;
-            this.y += this._facing.y * Game.speed;
+            this.x += this._facing.x * Game.speed / 2;
+            this.y += this._facing.y * Game.speed / 2;
             this._setDir();
         }
     });
