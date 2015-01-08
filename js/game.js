@@ -7,18 +7,11 @@ Game.map = {};
 
 // Tracking scores
 Game.lives = 3;
-Game.score = {};
-Game.score.sofa = 0;
+Game.map_num = 1;
+Game.score = 0;
 
 
 /* Extras : editor and map */
-//this must be loaded elsewhere(json, ajax?) 
-var __map = { x: 10, y: 8,
-        things: [[8,7,6],[8,8,15],[8,9,7],[8,5,13],[9,5,13],[10,5,13],[8,4,4],[9,4,4],[10,4,4],[7,4,1],[7,5,1],[7,6,1],[7,7,1],[7,8,1],[7,9,1],[7,10,1],[8,10,4],[9,10,4],[10,10,4],[11,4,0],[11,5,0],[11,6,3],[12,6,3],[11,7,13],[12,7,13],[12,5,1],[12,4,1],[13,4,2],[14,4,2],[15,4,0],[15,5,0],[15,6,0],[15,7,0],[15,8,0],[15,9,0],[15,10,0],[11,10,4],[12,10,4],[13,10,4],[14,10,4],[13,5,11],[14,5,11]],
-        floors: [[8,7,0],[9,7,0],[8,8,0],[8,9,0],[9,9,0],[9,8,0],[10,7,0],[10,8,0],[10,9,0],[8,6,0],[9,6,0],[10,6,0],[11,8,0],[12,8,0],[11,9,0],[12,9,0],[13,6,11],[14,6,11],[13,7,11],[14,7,11],[13,8,0],[14,8,0],[13,9,0],[14,9,0]],
-        enemies: [[14, 6, 2]]
-    };
-
 function serializeMap() {
     var things = Crafty("cosas").get();
     var floors = Crafty("piso").get();
@@ -47,7 +40,7 @@ window.onload = function() {
     Crafty.background('#004');
 
     /* Utils */
-    function loadMap(map) {
+    function initMap(map) {
         try {
             Game.map = map;
             var i, j;
@@ -99,6 +92,16 @@ window.onload = function() {
         Crafty.viewport.y = 0;
     }
 
+    function updateHUD() {
+        $('#hud').html('Puntos: ' + Game.score + '     Sofa restante: ' + Game.map.goals.sofa);
+    }
+
+    function loadMap(map) {
+        $.getJSON('map/map' + map + '.json', function(mapData) {
+            Game.map = mapData;
+            Crafty.scene('game');
+        });
+    }
 
 
     /* Components */
@@ -120,7 +123,7 @@ window.onload = function() {
             // Bind events & collision system
             this.onHit("gato", function(a) {
                 console.log("¡GATO!");
-                //Crafty.scene('end');
+                Crafty.scene('end');
             });
 
             this.onHit("cosas", function(a) {
@@ -249,7 +252,7 @@ window.onload = function() {
               .bind("KeyUp", function(e) {
                   // Control menu? for now, let's start the game
                   if (e.key == 32) { // Space bar start game
-                      Crafty.scene('game');
+                      loadMap(Game.map_num);
                   }
               });
     });
@@ -325,9 +328,12 @@ window.onload = function() {
 
     // Main game
     Crafty.scene('game', function() {
+        // HUD
+        $('#game').append('<div id="hud"></div>');
+
         // Load the map
         Crafty.background("#000");
-        loadMap(__map);
+        initMap(Game.map);
 
         // Creating the player in the starting point
         var gato = Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision, GEntity')
@@ -435,8 +441,8 @@ window.onload = function() {
                                       //Crafty.audio.play("rasgar", 1);
                                   }
 
-                                  Game.score.sofa ++;
-                                  console.log("Sofa", Game.score.sofa);
+                                  Game.map.goals.sofa--;
+                                  Game.score += 5;
                                   touchSomething = true;
 
                                   //Break the sofa
@@ -460,6 +466,14 @@ window.onload = function() {
                           if (!Crafty.audio.isPlaying("miau")) {
                               //Crafty.audio.play("miau", 1);
                           }
+                      } else {
+                          console.log(Game);
+
+                          // Check if goals are met => Next map
+                          if (Game.map.goals.sofa <= 0) {
+                              Game.map_num++;
+                              loadMap(Game.map_num);
+                          }
                       }
                   }
               })
@@ -474,7 +488,8 @@ window.onload = function() {
                           this._faceAnim();
                       }
                   }
-              });
+              })
+              .bind('EnterFrame', function() { updateHUD(); });
 
         // Create map enemies
         for (i = 0; i < Game.map.enemies.length; ++i) {
