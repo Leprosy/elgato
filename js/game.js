@@ -110,13 +110,20 @@ window.onload = function() {
 
         init: function() {
             this._facing = { x: 0, y: 0 };
+        },
+
+        _faceAnim: function() {
+            if (this._facing.x > 0) this.animate("right", -1);
+            if (this._facing.x < 0) this.animate("left", -1);
+            if (this._facing.y > 0) this.animate("down", -1);
+            if (this._facing.y < 0) this.animate("up", -1);
         }
     });
 
     Crafty.c("GEnemy", {
         enemyInit: function(gato) {
             // Init things
-            this.color(this._id == 1 ? '#FF0000' : '#0000FF');
+            //this.color(this._id == 1 ? '#FF0000' : '#0000FF');
             this.gato = gato;
             this.collision();
 
@@ -149,6 +156,8 @@ window.onload = function() {
             } else {
                 this._facing = { x: speed, y: 0 };
             }
+
+            this._faceAnim();
         },
 
         seek: function() {
@@ -168,14 +177,18 @@ window.onload = function() {
         // Pseudo Smart AI  : Try to align with the cat and chase it
         _seekY: function() {
             var diff = this._y - this.gato._y;
+            if (this._facing.x != 0) this._faceAnim();
 
             this._facing = {
                 y: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
                 x: 0
             }
+
+            this._faceAnim();
         },
         _seekX: function() {
             var diff = this._x - this.gato._x;
+            if (this._facing.y != 0) this._faceAnim();
 
             this._facing = {
                 x: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
@@ -216,7 +229,7 @@ window.onload = function() {
                 "rasgar": "snd/rasgar.mp3",
                 "music": "snd/elgato.mp3"
             },
-            "images": ["img/gato2.png", "img/sprite.png", "img/floor.png"]
+            "images": ["img/gato2.png", "img/sprite.png", "img/floor.png", "img/coda.png"]
             /*"sprites": definition only valid for the callback of loader (why?) */
         };
 
@@ -226,6 +239,7 @@ window.onload = function() {
             Crafty.sprite(Game.tile, "img/floor.png", { piso: [0,0] });
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
             Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
+            Crafty.sprite(Game.tile, "img/coda.png", { coda: [0,0] });
 
             // Ready, fire main menu
             //Crafty.audio.play("miau", 1);
@@ -339,17 +353,12 @@ window.onload = function() {
         var gato = Crafty.e('2D, Canvas, gato, Fourway, SpriteAnimation, Collision, GEntity')
               .attr({x: Game.size * Game.map.x,
                      y: Game.size * Game.map.y,
-                     w: Game.size, h: Game.size, z: 666,
+                     w: Game.size * 0.8, h: Game.size * 0.8, z: 666,
                      _action: false,
                      _idle: false,
 
                      // Perhaps these must be refactored in a component
-                     _faceAnim: function() {
-                         if (this._facing.x > 0) this.animate("right", -1);
-                         if (this._facing.x < 0) this.animate("left", -1);
-                         if (this._facing.y > 0) this.animate("down", -1);
-                         if (this._facing.y < 0) this.animate("up", -1);
-                     }
+
               })
               .fourway(Game.speed)
 
@@ -496,8 +505,12 @@ window.onload = function() {
             var pos = Game.map.enemies[i];
 
             // Refactor this in a component(function calls as attributes, please...)
-            Crafty.e('2D, Canvas, Color, Collision, GEntity, GEnemy, GAI' + pos[2])
-                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.6, w: Game.size * 0.6, _id: pos[2] })
+            Crafty.e('2D, Canvas, Collision, GEntity, GEnemy, SpriteAnimation, coda, GAI' + pos[2])
+                  .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.8, w: Game.size * 0.8, _id: pos[2] })
+                  .reel("down", 200, 0, 0, 3)
+                  .reel("left", 200, 0, 1, 3)
+                  .reel("right", 200, 0, 2, 3)
+                  .reel("up", 200, 0, 3, 3)
                   .enemyInit(gato);
         }
 
