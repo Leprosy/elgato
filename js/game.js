@@ -15,14 +15,14 @@ Game.score = 0;
 function serializeMap() {
     var things = Crafty("cosas").get();
     var floors = Crafty("piso").get();
-    var ser = "things: [";
+    var ser = '"things": [';
 
     for (i = 0; i < things.length; ++i) {
         ser += "[" + things[i]._x / Game.tile + "," + things[i]._y / Game.tile + ","+ things[i]._item + "],";
     }
 
     ser = ser.slice(0, -1) + "]";
-    ser += ", floors: [";
+    ser += ', "floors": [';
 
     for (i = 0; i < floors.length; ++i) {
         ser += "[" + floors[i]._x / Game.tile + "," + floors[i]._y / Game.tile + ","+ floors[i]._item + "],";
@@ -113,16 +113,12 @@ window.onload = function() {
         },
 
         _faceAnim: function() {
-            console.log(this._facing)
-
             if (this._facing.x != 0) {
-                console.log('x!=0')
                 if (this._facing.x > 0 && !this.isPlaying("right")) this.animate("right", -1);
                 if (this._facing.x < 0 && !this.isPlaying("left")) this.animate("left", -1);
             }
 
             if (this._facing.y != 0) {
-                console.log('y!=0')
                 if (this._facing.y > 0 && !this.isPlaying("down")) this.animate("down", -1);
                 if (this._facing.y < 0 && !this.isPlaying("up")) this.animate("up", -1);
             }
