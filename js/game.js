@@ -113,17 +113,25 @@ window.onload = function() {
         },
 
         _faceAnim: function() {
-            if (this._facing.x > 0) this.animate("right", -1);
-            if (this._facing.x < 0) this.animate("left", -1);
-            if (this._facing.y > 0) this.animate("down", -1);
-            if (this._facing.y < 0) this.animate("up", -1);
+            console.log(this._facing)
+
+            if (this._facing.x != 0) {
+                console.log('x!=0')
+                if (this._facing.x > 0 && !this.isPlaying("right")) this.animate("right", -1);
+                if (this._facing.x < 0 && !this.isPlaying("left")) this.animate("left", -1);
+            }
+
+            if (this._facing.y != 0) {
+                console.log('y!=0')
+                if (this._facing.y > 0 && !this.isPlaying("down")) this.animate("down", -1);
+                if (this._facing.y < 0 && !this.isPlaying("up")) this.animate("up", -1);
+            }
         }
     });
 
     Crafty.c("GEnemy", {
         enemyInit: function(gato) {
             // Init things
-            //this.color(this._id == 1 ? '#FF0000' : '#0000FF');
             this.gato = gato;
             this.collision();
 
@@ -163,7 +171,6 @@ window.onload = function() {
         seek: function() {
             // Sometimes make a switch
             if (Math.round(Math.random() * 30) == 0) {
-                console.log("RANDOM SWITCH")
                 this._setDir();
             }
 
@@ -177,7 +184,6 @@ window.onload = function() {
         // Pseudo Smart AI  : Try to align with the cat and chase it
         _seekY: function() {
             var diff = this._y - this.gato._y;
-            if (this._facing.x != 0) this._faceAnim();
 
             this._facing = {
                 y: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
@@ -188,19 +194,18 @@ window.onload = function() {
         },
         _seekX: function() {
             var diff = this._x - this.gato._x;
-            if (this._facing.y != 0) this._faceAnim();
 
             this._facing = {
                 x: diff < 0 ? 1 : (diff > 0 ? -1 : 0),
                 y: 0
             }
+
+            this._faceAnim();
         },
         _setDir: function() {
             if (this._x == this.gato._x) {
-                console.log("Match X")
                 this._seekY();
             } else if (this._y == this.gato._y) {
-                console.log("Match Y")
                 this._seekX();
             } else if (this._facing.x == 0 && this._facing.y == 0) {
                 // Select randomly direction to match
@@ -229,7 +234,7 @@ window.onload = function() {
                 "rasgar": "snd/rasgar.mp3",
                 "music": "snd/elgato.mp3"
             },
-            "images": ["img/gato2.png", "img/sprite.png", "img/floor.png", "img/coda.png"]
+            "images": ["img/gato2.png", "img/sprite.png", "img/floor.png", "img/coda.png", "img/broom.png"]
             /*"sprites": definition only valid for the callback of loader (why?) */
         };
 
@@ -240,6 +245,7 @@ window.onload = function() {
             Crafty.sprite(Game.tile, "img/sprite.png", { cosas: [0,0] });
             Crafty.sprite(Game.tile, "img/gato2.png", { gato: [0,0] });
             Crafty.sprite(Game.tile, "img/coda.png", { coda: [0,0] });
+            Crafty.sprite(Game.tile, "img/broom.png", { broom: [0,0] });
 
             // Ready, fire main menu
             //Crafty.audio.play("miau", 1);
@@ -503,9 +509,11 @@ window.onload = function() {
         // Create map enemies
         for (i = 0; i < Game.map.enemies.length; ++i) {
             var pos = Game.map.enemies[i];
+            var types = ['x', 'broom', 'coda'];
 
             // Refactor this in a component(function calls as attributes, please...)
-            Crafty.e('2D, Canvas, Collision, GEntity, GEnemy, SpriteAnimation, coda, GAI' + pos[2])
+            console.log(pos)
+            Crafty.e('2D, Canvas, Collision, GEntity, GEnemy, SpriteAnimation, ' + types[pos[2]] + ', GAI' + pos[2])
                   .attr({ x: pos[0] * Game.size, y: pos[1] * Game.size, h: Game.size * 0.8, w: Game.size * 0.8, _id: pos[2] })
                   .reel("down", 200, 0, 0, 3)
                   .reel("left", 200, 0, 1, 3)
