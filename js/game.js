@@ -4,6 +4,7 @@ Game.tile = 32; //size used for creating sprites
 Game.size = 64; //size used for actual display
 Game.speed = Game.size / 16;
 Game.map = {};
+Game.mapbak = {};
 
 // Tracking scores
 Game.lives = 3;
@@ -42,10 +43,10 @@ window.onload = function() {
     /* Utils */
     function initMap(map) {
         try {
-            Game.map = map;
+            Game.map = JSON.parse(JSON.stringify(Game.mapbak));
             var i, j;
 
-            // Load things and floors
+            // Creating things and floors
             for (i = 0; i < Game.map.floors.length; ++i) {
                 var data = Game.map.floors[i];
                 var it = floorOff(data[2]);
@@ -65,6 +66,7 @@ window.onload = function() {
                       .sprite(it[0], it[1]);
             }
 
+            // Ready
             console.info('Map generated');
         } catch(e) {
             alert("Invalid map data");
@@ -99,7 +101,7 @@ window.onload = function() {
     function loadMap(map) {
         $.getJSON('map/map' + map + '.json')
          .done(function(mapData) {
-             Game.map = mapData;
+             Game.mapbak = mapData;
              Crafty.scene('newmap');
          })
          .fail(function( jqxhr, textStatus, error ) {
@@ -233,7 +235,9 @@ window.onload = function() {
             "audio": {
                 "miau": "snd/miau.mp3",
                 "rasgar": "snd/rasgar.mp3",
-                "music": "snd/elgato.mp3"
+                "music": "snd/elgato.mp3",
+                "fail": "snd/fail.mp3",
+                "win": "snd/win.mp3",
             },
             "images": ["img/gato2.png", "img/sprite.png", "img/floor.png", "img/coda.png", "img/broom.png"]
             /*"sprites": definition only valid for the callback of loader (why?) */
@@ -296,6 +300,7 @@ window.onload = function() {
 
     // End map
     Crafty.scene("endmap", function() {
+        Crafty.audio.play("win", 1);
         resetView();
 
         Crafty.background("#000044");
@@ -314,6 +319,7 @@ window.onload = function() {
 
     // Lose life
     Crafty.scene("loselife", function() {
+        Crafty.audio.play("fail", 1);
         resetView();
 
         Game.lives--;
@@ -585,7 +591,7 @@ window.onload = function() {
         Crafty.viewport.follow(gato, 0, 0);
 
         // Start!
-        //Crafty.audio.play("music", -1);
+        Crafty.audio.play("music", -1);
     });
 
 
