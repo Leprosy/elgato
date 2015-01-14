@@ -270,12 +270,12 @@ window.onload = function() {
         $('#hud').remove();
         resetView();
 
-        Crafty.background("#004");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
-              .text("MALDAD DEL GATO<br />El juego<br />(oprima la barra)")
+        Crafty.background("#000");
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 150})
+              .text("EL GATO")
               .textColor('#FFFFFF')
-              .textFont({ size: '14px', weight: 'bold' })
-              .css({"text-align": "center"})
+              .textFont({ size: '25px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"})
               .bind("KeyUp", function(e) {
                   // Control menu? for now, let's start the game
                   if (e.key == 32) { // Space bar start game
@@ -283,18 +283,22 @@ window.onload = function() {
                       loadMap(Game.map_num);
                   }
               });
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 100, x:0, y: 400})
+              .text("ESPACIO para iniciar")
+              .textColor('#ffffff')
+              .textFont({ size: '15px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "2px 2px 2px #000"})
     });
 
     // New map message
     Crafty.scene("newmap", function() {
         resetView();
-
-        Crafty.background("#000044");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+        Crafty.background("#000000");
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
               .text("Etapa " + Game.map_num)
-              .textColor('#FF0000')
-              .textFont({ size: '14px', weight: 'bold' })
-              .css({"text-align": "center"});
+              .textColor('#FFFFFF')
+              .textFont({ size: '25px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"})
 
         setTimeout(function() {
             Crafty.scene('game')
@@ -305,13 +309,12 @@ window.onload = function() {
     Crafty.scene("endmap", function() {
         Crafty.audio.play("win", 1);
         resetView();
-
-        Crafty.background("#000044");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+        Crafty.background("#000000");
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
               .text("¡Etapa superada!")
-              .textColor('#FF0000')
-              .textFont({ size: '14px', weight: 'bold' })
-              .css({"text-align": "center"});
+              .textColor('#FFFFFF')
+              .textFont({ size: '25px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"})
 
         setTimeout(function() {
             Game.map_num++;
@@ -331,12 +334,13 @@ window.onload = function() {
             Crafty.scene("end");
         } else {
             Crafty.audio.play("fail", 1);
-            Crafty.background("#000044");
-            Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
-                  .text("¡¡Ouch!! Has perdido una vida")
+            Crafty.background("#333333");
+
+            Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
+                  .text("¡¡OUCH!!")
                   .textColor('#FF0000')
-                  .textFont({ size: '14px', weight: 'bold' })
-                  .css({"text-align": "center"});
+                  .textFont({ size: '25px', weight: 'bold', family: 'font' })
+                  .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"})
 
             setTimeout(function() {
                 Crafty.scene("game");
@@ -349,12 +353,13 @@ window.onload = function() {
         Crafty.audio.stop('music')
         resetView();
 
-        Crafty.background("#000044");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
-              .text("¡FIN!")
-              .textColor('#FF0000')
-              .textFont({ size: '14px', weight: 'bold' })
-              .css({"text-align": "center"});
+        Crafty.background("#ff0000");
+
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
+              .text("FIN DEL JUEGO")
+              .textColor('#000000')
+              .textFont({ size: '25px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "5px 5px 5px #333"})
 
         setTimeout(function() {
             Crafty.scene("menu");
