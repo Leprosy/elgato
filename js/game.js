@@ -97,10 +97,14 @@ window.onload = function() {
     }
 
     function loadMap(map) {
-        $.getJSON('map/map' + map + '.json', function(mapData) {
-            Game.map = mapData;
-            Crafty.scene('game');
-        });
+        $.getJSON('map/map' + map + '.json')
+         .done(function(mapData) {
+             Game.map = mapData;
+             Crafty.scene('game');
+         })
+         .fail(function() {
+             alert('Error loading invalid map');
+         });
     }
 
 
@@ -271,6 +275,30 @@ window.onload = function() {
                       loadMap(Game.map_num);
                   }
               });
+    });
+
+    // New map
+    Crafty.scene("newmap", function() {
+        resetView();
+
+        Crafty.background("#000044");
+        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+              .text("Etapa " + Game.map_num)
+              .textColor('#FF0000')
+              .textFont({ size: '14px', weight: 'bold' })
+              .css({"text-align": "center"});
+    });
+
+    // Lose life
+    Crafty.scene("loselife", function() {
+        resetView();
+
+        Crafty.background("#000044");
+        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+              .text("¡¡Ouch!!")
+              .textColor('#FF0000')
+              .textFont({ size: '14px', weight: 'bold' })
+              .css({"text-align": "center"});
     });
 
     // The end!
