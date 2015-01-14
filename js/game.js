@@ -267,6 +267,7 @@ window.onload = function() {
 
     // Main menu
     Crafty.scene("menu", function() {
+        $('#hud').remove();
         resetView();
 
         Crafty.background("#004");
@@ -278,6 +279,7 @@ window.onload = function() {
               .bind("KeyUp", function(e) {
                   // Control menu? for now, let's start the game
                   if (e.key == 32) { // Space bar start game
+                      $('#game').append('<div id="hud"></div>');
                       loadMap(Game.map_num);
                   }
               });
@@ -418,9 +420,6 @@ window.onload = function() {
 
     // Main game
     Crafty.scene('game', function() {
-        // HUD
-        $('#game').append('<div id="hud"></div>');
-
         // Load the map
         Crafty.background("#000");
         initMap(Game.map);
