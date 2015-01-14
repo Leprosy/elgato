@@ -238,6 +238,7 @@ window.onload = function() {
                 "music": "snd/elgato.mp3",
                 "fail": "snd/fail.mp3",
                 "win": "snd/win.mp3",
+                "gameover": "snd/gameover.mp3"
             },
             "images": ["img/gato2.png", "img/sprite.png", "img/floor.png", "img/coda.png", "img/broom.png"]
             /*"sprites": definition only valid for the callback of loader (why?) */
@@ -319,14 +320,15 @@ window.onload = function() {
 
     // Lose life
     Crafty.scene("loselife", function() {
-        Crafty.audio.play("fail", 1);
         resetView();
 
         Game.lives--;
 
         if (Game.lives == 0) {
+            Crafty.audio.play("gameover", 1)
             Crafty.scene("end");
         } else {
+            Crafty.audio.play("fail", 1);
             Crafty.background("#000044");
             Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
                   .text("¡¡Ouch!! Has perdido una vida")
@@ -342,6 +344,7 @@ window.onload = function() {
 
     // The end!
     Crafty.scene("end", function() {
+        Crafty.audio.stop('music')
         resetView();
 
         Crafty.background("#000044");
@@ -585,13 +588,14 @@ window.onload = function() {
                   .enemyInit(gato);
         }
 
-
         // Follow the cat
         Crafty.viewport.clampToEntities = false
         Crafty.viewport.follow(gato, 0, 0);
 
         // Start!
-        Crafty.audio.play("music", -1);
+        if (!Crafty.audio.isPlaying("music")) {
+            Crafty.audio.play("music", -1);
+        }
     });
 
 
