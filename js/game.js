@@ -5,11 +5,10 @@ Game.size = 64; //size used for actual display
 Game.speed = Game.size / 16;
 Game.map = {};
 Game.mapbak = {};
-
-// Tracking scores
-Game.lives = 3;
+Game.lives = 0;
 Game.map_num = 1;
 Game.score = 0;
+Game.maplimit = 2;
 
 
 /* Extras : editor and map */
@@ -95,7 +94,7 @@ window.onload = function() {
     }
 
     function updateHUD() {
-        $('#hud').html('Vidas:' + Game.lives + '  Puntos:' + Game.score + '     Sofa restante: ' + Game.map.goals.sofa);
+        $('#hud').html('<img src="img/life.png" />x' + Game.lives + '  <img src="img/sofa.png" />x' + Game.map.goals.sofa);
     }
 
     function loadMap(map) {
@@ -279,6 +278,7 @@ window.onload = function() {
               .bind("KeyUp", function(e) {
                   // Control menu? for now, let's start the game
                   if (e.key == 32) { // Space bar start game
+                      Game.lives = 3;
                       $('#game').append('<div id="hud"></div>');
                       loadMap(Game.map_num);
                   }
@@ -308,6 +308,7 @@ window.onload = function() {
     // End map
     Crafty.scene("endmap", function() {
         Crafty.audio.play("win", 1);
+        updateHUD();
         resetView();
         Crafty.background("#000000");
         Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
@@ -317,17 +318,22 @@ window.onload = function() {
               .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"})
 
         setTimeout(function() {
+            Game.score += Game.lives * 20;
             Game.map_num++;
+
+            if (Game.map_num >= Game.maplimit) {
+                Game.map_num = 1;
+            }
+
             loadMap(Game.map_num);
         }, 2000);
-
     });
 
     // Lose life
     Crafty.scene("loselife", function() {
-        resetView();
-
         Game.lives--;
+        resetView();
+        updateHUD();
 
         if (Game.lives == 0) {
             Crafty.audio.play("gameover", 1)
@@ -359,11 +365,24 @@ window.onload = function() {
               .text("FIN DEL JUEGO")
               .textColor('#000000')
               .textFont({ size: '25px', weight: 'bold', family: 'font' })
-              .css({"text-align": "center", "text-shadow": "5px 5px 5px #333"})
+              .css({"text-align": "center", "text-shadow": "5px 5px 5px #333"});
 
-        setTimeout(function() {
-            Crafty.scene("menu");
-        }, 5000);
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 100, x:0, y: 300})
+              .text("Puntaje final<br /><br />" + Game.score)
+              .textColor('#AAAAAA')
+              .textFont({ size: '15px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "2px 2px 2px #000"});
+
+        Crafty.e("2D, DOM, Text").attr({w: 768, h: 100, x:0, y: 400})
+              .text("ESPACIO para continuar")
+              .textColor('#CCCCCC')
+              .textFont({ size: '15px', weight: 'bold', family: 'font' })
+              .css({"text-align": "center", "text-shadow": "2px 2px 2px #000"})
+              .bind("KeyUp", function(e) {
+                  if (e.key == 32) {
+                      Crafty.scene("menu");
+                  }
+              });
     });
 
 
@@ -574,7 +593,9 @@ window.onload = function() {
                       }
                   }
               })
-              .bind('EnterFrame', function() { updateHUD(); });
+              .bind('EnterFrame', function() {
+                  updateHUD();
+              });
 
         // Create map enemies
         for (i = 0; i < Game.map.enemies.length; ++i) {
