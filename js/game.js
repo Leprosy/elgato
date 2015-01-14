@@ -93,18 +93,19 @@ window.onload = function() {
     }
 
     function updateHUD() {
-        $('#hud').html('Puntos: ' + Game.score + '     Sofa restante: ' + Game.map.goals.sofa);
+        $('#hud').html('Vidas:' + Game.lives + '  Puntos:' + Game.score + '     Sofa restante: ' + Game.map.goals.sofa);
     }
 
     function loadMap(map) {
         $.getJSON('map/map' + map + '.json')
          .done(function(mapData) {
              Game.map = mapData;
-             Crafty.scene('game');
+             Crafty.scene('newmap');
          })
-         .fail(function() {
-             alert('Error loading invalid map');
-         });
+         .fail(function( jqxhr, textStatus, error ) {
+             var err = textStatus + ", " + error;
+             alert("Map loading failed: " + err )}
+         );
     }
 
 
@@ -138,7 +139,7 @@ window.onload = function() {
             // Bind events & collision system
             this.onHit("gato", function(a) {
                 console.log("¡GATO!");
-                Crafty.scene('end');
+                Crafty.scene("loselife");
             });
 
             this.onHit("cosas", function(a) {
@@ -277,7 +278,7 @@ window.onload = function() {
               });
     });
 
-    // New map
+    // New map message
     Crafty.scene("newmap", function() {
         resetView();
 
@@ -287,18 +288,50 @@ window.onload = function() {
               .textColor('#FF0000')
               .textFont({ size: '14px', weight: 'bold' })
               .css({"text-align": "center"});
+
+        setTimeout(function() {
+            Crafty.scene('game')
+        }, 2000);
+    });
+
+    // End map
+    Crafty.scene("endmap", function() {
+        resetView();
+
+        Crafty.background("#000044");
+        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+              .text("¡Etapa superada!")
+              .textColor('#FF0000')
+              .textFont({ size: '14px', weight: 'bold' })
+              .css({"text-align": "center"});
+
+        setTimeout(function() {
+            Game.map_num++;
+            loadMap(Game.map_num);
+        }, 2000);
+
     });
 
     // Lose life
     Crafty.scene("loselife", function() {
         resetView();
 
-        Crafty.background("#000044");
-        Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
-              .text("¡¡Ouch!!")
-              .textColor('#FF0000')
-              .textFont({ size: '14px', weight: 'bold' })
-              .css({"text-align": "center"});
+        Game.lives--;
+
+        if (Game.lives == 0) {
+            Crafty.scene("end");
+        } else {
+            Crafty.background("#000044");
+            Crafty.e("2D, DOM, Text").attr({w: 100, h: 20, x: 150, y: 120})
+                  .text("¡¡Ouch!! Has perdido una vida")
+                  .textColor('#FF0000')
+                  .textFont({ size: '14px', weight: 'bold' })
+                  .css({"text-align": "center"});
+
+            setTimeout(function() {
+                Crafty.scene("game");
+            }, 2000);
+        }
     });
 
     // The end!
@@ -311,6 +344,10 @@ window.onload = function() {
               .textColor('#FF0000')
               .textFont({ size: '14px', weight: 'bold' })
               .css({"text-align": "center"});
+
+        setTimeout(function() {
+            Crafty.scene("menu");
+        }, 5000);
     });
 
 
@@ -386,9 +423,6 @@ window.onload = function() {
                      w: Game.size * 0.8, h: Game.size * 0.8, z: 666,
                      _action: false,
                      _idle: false,
-
-                     // Perhaps these must be refactored in a component
-
               })
               .fourway(Game.speed)
 
@@ -476,10 +510,6 @@ window.onload = function() {
                           switch(cosa._itemId) {
                               case 15: // Sofa
                               case 6:
-                                  if (!Crafty.audio.isPlaying("rasgar")) {
-                                      //Crafty.audio.play("rasgar", 1);
-                                  }
-
                                   Game.map.goals.sofa--;
                                   Game.score += 5;
                                   touchSomething = true;
@@ -503,15 +533,18 @@ window.onload = function() {
                       if (!touchSomething) { // nothing was touched by our little friend
                           // just annoy humans!
                           if (!Crafty.audio.isPlaying("miau")) {
-                              //Crafty.audio.play("miau", 1);
+                              Crafty.audio.play("miau", 1);
                           }
                       } else {
+                          if (!Crafty.audio.isPlaying("rasgar")) {
+                              Crafty.audio.play("rasgar", 1);
+                          }
+
                           console.log(Game);
 
                           // Check if goals are met => Next map
                           if (Game.map.goals.sofa <= 0) {
-                              Game.map_num++;
-                              loadMap(Game.map_num);
+                              Crafty.scene('endmap');
                           }
                       }
                   }
