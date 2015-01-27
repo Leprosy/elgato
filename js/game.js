@@ -8,7 +8,7 @@ Game.mapbak = {};
 Game.lives = 0;
 Game.map_num = 1;
 Game.score = 0;
-Game.maplimit = 2;
+Game.maplimit = 3;
 
 
 /* Extras : editor and map */
