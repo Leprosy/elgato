@@ -230,6 +230,12 @@ window.onload = function() {
     /* Scenes */
     // The loading screen
     Crafty.scene("loading", function() {
+        var text = Crafty.e("2D, DOM, Text").attr({w: 768, h: 200, x: 0, y: 250})
+                         .text("Cargando")
+                         .textColor('#FFFFFF')
+                         .textFont({ size: '25px', weight: 'bold', family: 'font' })
+                         .css({"text-align": "center", "text-shadow": "5px 5px 5px #000"});
+
         var loadObj = {
             "audio": {
                 "miau": "snd/miau.mp3",
@@ -253,11 +259,12 @@ window.onload = function() {
             Crafty.sprite(Game.tile, "img/broom.png", { broom: [0,0] });
 
             // Ready, fire main menu
-            //Crafty.audio.play("miau", 1);
+            Crafty.audio.play("miau", 1);
             Crafty.scene("menu");
         }, function(e) {
             // On progress
             console.log(e);
+            text.text("Cargando " + Math.round(e.percent) + "%");
         }, function(e) {
             // On error
             console.debug(e);
@@ -266,6 +273,7 @@ window.onload = function() {
 
     // Main menu
     Crafty.scene("menu", function() {
+        console.log("MENU");
         $('#hud').remove();
         resetView();
 
